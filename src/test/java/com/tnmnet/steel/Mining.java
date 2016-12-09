@@ -3,8 +3,8 @@ package com.tnmnet.steel;
 import java.util.List;
 
 import com.tnmnet.steel.entity.Price;
+import com.tnmnet.steel.repo.MongoDBTmp;
 import com.tnmnet.steel.service.StockMining;
-import com.tnmnet.steel.util.MongoDBTmp;
 
 public class Mining {
 
