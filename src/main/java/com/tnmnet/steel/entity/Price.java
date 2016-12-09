@@ -13,7 +13,7 @@ public class Price {
 	private String times;
 	private BigDecimal price;
 
-	public Price(String code,String times, BigDecimal price) {
+	public Price(String code, String times, BigDecimal price) {
 		super();
 		this.code = code;
 		this.times = times;
@@ -55,4 +55,10 @@ public class Price {
 	public void setCode(String code) {
 		this.code = code;
 	}
+
+	@Override
+	public String toString() {
+		return times + " - " + this.price.toPlainString();
+	}
+
 }
