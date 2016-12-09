@@ -9,12 +9,12 @@ import com.tnmnet.steel.util.DateUtil;
 
 public class Order extends MiningCal {
 
-	public String buyTimes;
-	public BigDecimal buyPrice;
-	public Integer qty;
+	private String buyTimes;
+	private BigDecimal buyPrice;
+	private Integer qty;
 	//
-	public Date salTimes;
-	public BigDecimal salPrice;
+	private Date salTimes;
+	private BigDecimal salPrice;
 
 	public Order(String times, BigDecimal price, Integer qty) {
 		super();
@@ -23,8 +23,37 @@ public class Order extends MiningCal {
 		this.qty = qty;
 	}
 
+	public String getBuyTimes() {
+		return buyTimes;
+	}
+
+	public BigDecimal getBuyPrice() {
+		return buyPrice;
+	}
+
+	public Integer getQty() {
+		return qty;
+	}
+
+	/**
+	 * 可以顺带卖吗？
+	 * 
+	 * @param salePrice
+	 * @return
+	 */
 	public boolean canSale(BigDecimal salePrice) {
 		return moreThan(salePrice, buyPrice.multiply(new BigDecimal(1.2)));
+	}
+
+	/**
+	 * 可以卖的最低买入单
+	 * 
+	 * @param salePrice
+	 * @return
+	 */
+	public boolean canSaleMin(BigDecimal salePrice, BigDecimal riseRate, BigDecimal layer) {
+		BigDecimal risePercent = salePrice.subtract(buyPrice).divide(buyPrice, BigDecimal.ROUND_HALF_UP);
+		return moreThan(risePercent, riseRate.multiply(layer));
 	}
 
 	/**
@@ -78,8 +107,8 @@ public class Order extends MiningCal {
 	 * @return
 	 */
 	private BigDecimal annual() {
-		int days = holdDays();
-		return new BigDecimal(days).divide(new BigDecimal(365), BigDecimal.ROUND_HALF_UP);
+		int days = holdDays() * 100;
+		return new BigDecimal(days).divide(new BigDecimal(365), BigDecimal.ROUND_HALF_UP, 6);
 	}
 
 	/**
