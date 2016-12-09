@@ -45,9 +45,8 @@ public class StockMining extends MiningCal {
 				if (buyMax(currentPrice)) {
 					buyMaxOrder(times, currentPrice);
 				}
-			} else if (stockList.size() >= 3) {//
-				saleOrder(times, currentPrice);
 			}
+//			saleOrder(times, currentPrice);
 			latestPrice = currentPrice;
 			latestTimes = times;
 		}
@@ -74,11 +73,10 @@ public class StockMining extends MiningCal {
 
 	//
 	private void saleOrder(String times, BigDecimal currentPrice) {
-		Order minOrder = stockList.element();
-		if (minOrder.canSaleMin(currentPrice, riseRate, layer)) {
-			log("sale......." + times + " # " + currentPrice);
+		if (stockList.getFirst().canSaleMin(currentPrice, riseRate, layer)) {
 			//
-			while (stockList.element().canSale(currentPrice)) {
+			while (stockList.getFirst().canSale(currentPrice)) {
+				log("sale......." + times + " # " + currentPrice);
 				Order item = stockList.remove().sale(times, currentPrice);
 				totalFundAmt = totalFundAmt.add(item.getSalAmt());
 				totalUsedAmt = totalUsedAmt.subtract(item.getSalAmt());

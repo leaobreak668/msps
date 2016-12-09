@@ -42,7 +42,7 @@ public class Order extends MiningCal {
 	 * @return
 	 */
 	public boolean canSale(BigDecimal salePrice) {
-		return moreThan(salePrice, buyPrice.multiply(new BigDecimal(1.2)));
+		return moreThan(salePrice, buyPrice.multiply(new BigDecimal(1.1)));
 	}
 
 	/**
@@ -117,6 +117,9 @@ public class Order extends MiningCal {
 	 * @return
 	 */
 	private int holdDays() {
+		if (this.salTimes == null) {
+			System.out.println("");
+		}
 		Date saleDate = this.salTimes == null ? Calendar.getInstance().getTime() : this.salTimes;
 		int days = this.calDays(DateUtil.getDateFromString(this.buyTimes, "yyyy-MM-dd"), saleDate);
 		return days;
