@@ -6,6 +6,7 @@ import java.util.Date;
 
 import com.tnmnet.steel.service.MiningCal;
 import com.tnmnet.steel.util.DateUtil;
+import com.tnmnet.steel.util.DateUtils;
 
 public class Order extends MiningCal {
 
@@ -42,7 +43,7 @@ public class Order extends MiningCal {
 	 * @return
 	 */
 	public boolean canSale(BigDecimal salePrice) {
-		return moreThan(salePrice, buyPrice.multiply(new BigDecimal(1.1)));
+		return moreThan(salePrice, buyPrice.multiply(new BigDecimal(1.02)));
 	}
 
 	/**
@@ -107,8 +108,8 @@ public class Order extends MiningCal {
 	 * @return
 	 */
 	private BigDecimal annual() {
-		int days = holdDays() * 100;
-		return new BigDecimal(days).divide(new BigDecimal(365), BigDecimal.ROUND_HALF_UP, 6);
+		int days = holdDays();
+		return (new BigDecimal(365)).divide(new BigDecimal(days), BigDecimal.ROUND_HALF_UP, 6);
 	}
 
 	/**
@@ -122,6 +123,22 @@ public class Order extends MiningCal {
 		}
 		Date saleDate = this.salTimes == null ? Calendar.getInstance().getTime() : this.salTimes;
 		int days = this.calDays(DateUtil.getDateFromString(this.buyTimes, "yyyy-MM-dd"), saleDate);
-		return days;
+		return days > 0 ? days : 1;
+	}
+
+	@Override
+	public String toString() {
+		StringBuffer sb = new StringBuffer("");
+		sb.append(" buyTimes: " + this.buyTimes);
+		sb.append(" buyPrice: " + this.buyPrice);
+		sb.append(" salTimes: " + DateUtils.getDateString(this.salTimes, "yyyy-MM-dd"));
+		sb.append(" salPrice: " + this.salPrice);
+		sb.append(" holdDays: " + holdDays());
+		sb.append(" difPrice: " + this.salPrice.subtract(this.buyPrice));
+		sb.append(" nowsRate : " + this.getSalAmt().subtract(this.getBuyAmt()).divide(this.getBuyAmt(), BigDecimal.ROUND_HALF_UP, 6));
+		sb.append(" yearRate : " + this.getYearRate());
+		sb.append(" difAmount: " + this.getSalAmt().subtract(this.getBuyAmt()));
+		//
+		return sb.toString();
 	}
 }

@@ -21,7 +21,8 @@ public class MongoDBTmp {
 	/**
 	 * URI
 	 */
-	private static final String URI = "mongodb://172.16.9.65:27017/nodedb";
+//	private static final String URI = "mongodb://172.16.9.65:27017/nodedb";
+	private static final String URI = "mongodb://127.0.0.1:27017/nodedb";
 
 	/**
 	 * 
@@ -35,7 +36,7 @@ public class MongoDBTmp {
 		MongoCollection<org.bson.Document> collection = db.getCollection(collectionName);
 		FindIterable<Document> doc = collection.find();
 		//
-		List<Price> list = new ArrayList<Price>();
+		final List<Price> list = new ArrayList<Price>();
 		doc.forEach(new Block<Document>() {
 
 			@Override

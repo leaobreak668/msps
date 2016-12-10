@@ -17,7 +17,7 @@ public class StockMining extends MiningCal {
 	private BigDecimal totalMaxUsedAmt = new BigDecimal(0);// 最大占用金额
 	//
 	private BigDecimal riseRate = new BigDecimal(0.03); // 追涨百分比
-	private BigDecimal fallRate = new BigDecimal(0.05); // 杀跌百分比
+	private BigDecimal fallRate = new BigDecimal(0.08); // 杀跌百分比
 	private BigDecimal layer = new BigDecimal(3); // 单数
 	//
 	private BigDecimal maxPrice = new BigDecimal(0);
@@ -33,28 +33,34 @@ public class StockMining extends MiningCal {
 			String times = price.getTimes();
 			BigDecimal currentPrice = price.getPrice();
 			//
+			latestPrice = currentPrice;
+			latestTimes = times;
+			//
 			if (stockList.size() == 0) {
 				buyMinOrder(times, currentPrice);
 				maxPrice = currentPrice;
 				minPrice = currentPrice;
+				continue;
+				//
+			} else if (stockList.getFirst().canSaleMin(currentPrice, riseRate, layer)) {
+				saleOrder(times, currentPrice);
+				continue;
 			} else if (Bdc.lt(currentPrice, minPrice, 2)) {
 				if (buyMin(currentPrice)) {
 					buyMinOrder(times, currentPrice);
 				}
+				continue;
 			} else if (Bdc.mt(currentPrice, maxPrice, 2)) {
 				if (buyMax(currentPrice)) {
 					buyMaxOrder(times, currentPrice);
+					continue;
 				}
 			}
-//			saleOrder(times, currentPrice);
-			latestPrice = currentPrice;
-			latestTimes = times;
 		}
 		log("totalFundAmt: " + totalFundAmt);
 		BigDecimal totalAmt = new BigDecimal(totalFundAmt.toPlainString());
 		for (Order item : stockList) {
 			item.sale(latestTimes, latestPrice);
-			totalUsedAmt = totalUsedAmt.subtract(item.getSalAmt());
 			totalAmt = totalAmt.add(item.getSalAmt());
 			stockSaledList.add(item);
 			log("Sale Hold.." + item.getBuyPrice() + " - " + latestPrice + " # " + item.getYearRate());
@@ -62,9 +68,9 @@ public class StockMining extends MiningCal {
 		//
 		log("totalAmt    : " + totalAmt);
 		log("totalMaxUsedAmt: " + totalMaxUsedAmt);
-		log("Rate: " + (totalAmt.subtract(initAmt).multiply(new BigDecimal(100))).divide(totalMaxUsedAmt, BigDecimal.ROUND_HALF_UP));
+		log("Rate: " + (totalAmt.subtract(initAmt)).divide(totalMaxUsedAmt, BigDecimal.ROUND_HALF_UP));
 		//
-		BigDecimal avgYearRate = new BigDecimal(0);
+		BigDecimal avgYearRate = new BigDecimal("0");
 		for (Order order : stockSaledList) {
 			avgYearRate = avgYearRate.add(order.getYearRate());
 		}
@@ -73,25 +79,23 @@ public class StockMining extends MiningCal {
 
 	//
 	private void saleOrder(String times, BigDecimal currentPrice) {
-		if (stockList.getFirst().canSaleMin(currentPrice, riseRate, layer)) {
-			//
-			while (stockList.getFirst().canSale(currentPrice)) {
-				log("sale......." + times + " # " + currentPrice);
-				Order item = stockList.remove().sale(times, currentPrice);
-				totalFundAmt = totalFundAmt.add(item.getSalAmt());
-				totalUsedAmt = totalUsedAmt.subtract(item.getSalAmt());
-				stockSaledList.add(item);
-			}
-			//
-			if (stockList.size() == 0) {
-				maxPrice = new BigDecimal(0);
-				minPrice = new BigDecimal(0);
-			} else if (stockList.size() == 1) {
-				minPrice = stockList.get(0).getBuyPrice();
-				maxPrice = stockList.get(stockList.size() - 1).getBuyPrice();
-			} else {
-				minPrice = stockList.get(0).getBuyPrice();
-			}
+		//
+		while (stockList.size() > 0 && stockList.getFirst().canSale(currentPrice)) {
+			log("sale......." + times + " # " + currentPrice);
+			Order item = stockList.remove().sale(times, currentPrice);
+			totalFundAmt = totalFundAmt.add(item.getSalAmt());
+			totalUsedAmt = totalUsedAmt.subtract(item.getSalAmt());
+			stockSaledList.add(item);
+		}
+		//
+		if (stockList.size() == 0) {
+			maxPrice = new BigDecimal(0);
+			minPrice = new BigDecimal(0);
+		} else if (stockList.size() == 1) {
+			minPrice = stockList.get(0).getBuyPrice();
+			maxPrice = stockList.get(stockList.size() - 1).getBuyPrice();
+		} else {
+			minPrice = stockList.get(0).getBuyPrice();
 		}
 	}
 
@@ -130,7 +134,7 @@ public class StockMining extends MiningCal {
 		}
 		log("buy min.." + times + " # " + price);
 		Order order = new Order(times, price, qty.intValue());
-		stockList.add(order);
+		stockList.addFirst(order);
 		//
 		totalFundAmt = totalFundAmt.subtract(order.getBuyAmt());
 		totalUsedAmt = totalUsedAmt.add(order.getBuyAmt());
@@ -149,7 +153,7 @@ public class StockMining extends MiningCal {
 		}
 		log("buy max...." + times + " # " + price);
 		Order order = new Order(times, price, qty.intValue());
-		stockList.add(order);
+		stockList.addLast(order);
 		//
 		totalFundAmt = totalFundAmt.subtract(order.getBuyAmt());
 		totalUsedAmt = totalUsedAmt.add(order.getBuyAmt());
