@@ -47,17 +47,6 @@ public class Order extends MiningCal {
 	}
 
 	/**
-	 * 可以卖的最低买入单
-	 * 
-	 * @param salePrice
-	 * @return
-	 */
-	public boolean canSaleMin(BigDecimal salePrice, BigDecimal riseRate, BigDecimal layer) {
-		BigDecimal risePercent = salePrice.subtract(buyPrice).divide(buyPrice, BigDecimal.ROUND_HALF_UP);
-		return moreThan(risePercent, riseRate.multiply(layer));
-	}
-
-	/**
 	 * 卖出
 	 * 
 	 * @param times

@@ -17,8 +17,8 @@ public class StockMining extends MiningCal {
 	private BigDecimal totalMaxUsedAmt = new BigDecimal(0);// 最大占用金额
 	//
 	private BigDecimal riseRate = new BigDecimal(0.03); // 追涨百分比
-	private BigDecimal fallRate = new BigDecimal(0.08); // 杀跌百分比
-	private BigDecimal layer = new BigDecimal(3); // 单数
+	private BigDecimal fallRate = new BigDecimal(0.09); // 杀跌百分比
+	private BigDecimal layer = new BigDecimal(3); // 卖出追涨的位数
 	//
 	private BigDecimal maxPrice = new BigDecimal(0);
 	private BigDecimal minPrice = new BigDecimal(0);
@@ -42,15 +42,15 @@ public class StockMining extends MiningCal {
 				minPrice = currentPrice;
 				continue;
 				//
-			} else if (stockList.getFirst().canSaleMin(currentPrice, riseRate, layer)) {
+			} else if (canSaleMin(stockList.getFirst(), currentPrice)) {
 				saleOrder(times, currentPrice);
 				continue;
-			} else if (Bdc.lt(currentPrice, minPrice, 2)) {
+			} else if (lessThan(currentPrice, minPrice)) {
 				if (buyMin(currentPrice)) {
 					buyMinOrder(times, currentPrice);
 				}
 				continue;
-			} else if (Bdc.mt(currentPrice, maxPrice, 2)) {
+			} else if (moreThan(currentPrice, maxPrice)) {
 				if (buyMax(currentPrice)) {
 					buyMaxOrder(times, currentPrice);
 					continue;
@@ -75,6 +75,17 @@ public class StockMining extends MiningCal {
 			avgYearRate = avgYearRate.add(order.getYearRate());
 		}
 		log("avgYearRate: " + avgYearRate.divide(new BigDecimal(stockSaledList.size()), BigDecimal.ROUND_HALF_UP));
+	}
+
+	/**
+	 * 可以卖的最低买入单
+	 * 
+	 * @param salePrice
+	 * @return
+	 */
+	private boolean canSaleMin(Order order, BigDecimal currentPrice) {
+		BigDecimal risePercent = currentPrice.subtract(order.getBuyPrice()).divide(order.getBuyPrice(), BigDecimal.ROUND_HALF_UP);
+		return moreThan(risePercent, riseRate.multiply(layer));
 	}
 
 	//
@@ -111,11 +122,11 @@ public class StockMining extends MiningCal {
 	}
 
 	//
-	private Integer fallPercentFromMax(BigDecimal currentPrice) {
+	private BigDecimal fallPercentFromMax(BigDecimal currentPrice) {
 		if (eqZero(maxPrice)) {
-			return 0;
+			return new BigDecimal(0);
 		}
-		return maxPrice.subtract(currentPrice).multiply(new BigDecimal("100")).divide(maxPrice, BigDecimal.ROUND_HALF_UP).intValue();
+		return maxPrice.subtract(currentPrice).divide(maxPrice, BigDecimal.ROUND_HALF_UP);
 	}
 
 	//
@@ -124,8 +135,8 @@ public class StockMining extends MiningCal {
 		if (qty == 0) {
 			return;
 		}
-		Integer fallMax = fallPercentFromMax(minPrice);
-		if (fallMax < (fallRate.multiply(new BigDecimal(stockList.size() - 1))).intValue()) {
+		BigDecimal fallMax = fallPercentFromMax(price);
+		if (lessThan(fallMax, fallRate.multiply(new BigDecimal(stockList.size() - 1)))) {
 			return;
 		}
 		//

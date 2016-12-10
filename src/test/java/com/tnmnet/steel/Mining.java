@@ -9,7 +9,7 @@ import com.tnmnet.steel.service.StockMining;
 public class Mining {
 
 	public static void main(String[] args) {
-		List<Price> lists = MongoDBTmp.getPriceList("PRICE000783");
+		List<Price> lists = MongoDBTmp.getPriceList("PRICE600755");
 		StockMining mining = new StockMining();
 		mining.makeMoney(lists);
 	}
