@@ -23,4 +23,8 @@ public abstract class MiningCal {
 	protected boolean eqZero(BigDecimal bigDecimal) {
 		return Bdc.eqZero(bigDecimal, 2);
 	}
+
+	protected void log(String s) {
+		System.out.println(s);
+	}
 }

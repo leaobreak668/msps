@@ -5,14 +5,15 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.tnmnet.steel.entity.Order;
+import com.tnmnet.steel.entity.IOrder;
+import com.tnmnet.steel.entity.OrderImpl;
 import com.tnmnet.steel.entity.Price;
 import com.tnmnet.steel.util.Bdc;
 
 public class StockMining extends MiningCal {
 	//
 	private BigDecimal initAmt = new BigDecimal(1000000.0);// 初始金额
-	private BigDecimal totalFundAmt = new BigDecimal(1000000.0); // 可用资金额
+	private BigDecimal totalAmt = new BigDecimal(1000000.0); // 可用资金额
 	private BigDecimal totalUsedAmt = new BigDecimal(0);// 即时占用金额
 	private BigDecimal totalMaxUsedAmt = new BigDecimal(0);// 最大占用金额
 	//
@@ -25,8 +26,8 @@ public class StockMining extends MiningCal {
 	private BigDecimal latestPrice = new BigDecimal(0);
 	private String latestTimes;
 
-	private LinkedList<Order> stockList = new LinkedList<Order>();
-	private List<Order> stockSaledList = new ArrayList<Order>();
+	private LinkedList<IOrder> stockList = new LinkedList<IOrder>();
+	private List<IOrder> stockSaledList = new ArrayList<IOrder>();
 
 	public void makeMoney(List<Price> lists) {
 		for (Price price : lists) {
@@ -57,24 +58,16 @@ public class StockMining extends MiningCal {
 				}
 			}
 		}
-		log("totalFundAmt: " + totalFundAmt);
-		BigDecimal totalAmt = new BigDecimal(totalFundAmt.toPlainString());
-		for (Order item : stockList) {
+		for (IOrder item : stockList) {
 			item.sale(latestTimes, latestPrice);
 			totalAmt = totalAmt.add(item.getSalAmt());
 			stockSaledList.add(item);
-			log("Sale Hold.." + item.getBuyPrice() + " - " + latestPrice + " # " + item.getYearRate());
+			log("Sale Hold.." + item);
 		}
 		//
 		log("totalAmt    : " + totalAmt);
 		log("totalMaxUsedAmt: " + totalMaxUsedAmt);
 		log("Rate: " + (totalAmt.subtract(initAmt)).divide(totalMaxUsedAmt, BigDecimal.ROUND_HALF_UP));
-		//
-		BigDecimal avgYearRate = new BigDecimal("0");
-		for (Order order : stockSaledList) {
-			avgYearRate = avgYearRate.add(order.getYearRate());
-		}
-		log("avgYearRate: " + avgYearRate.divide(new BigDecimal(stockSaledList.size()), BigDecimal.ROUND_HALF_UP));
 	}
 
 	/**
@@ -83,7 +76,7 @@ public class StockMining extends MiningCal {
 	 * @param salePrice
 	 * @return
 	 */
-	private boolean canSaleMin(Order order, BigDecimal currentPrice) {
+	private boolean canSaleMin(IOrder order, BigDecimal currentPrice) {
 		BigDecimal risePercent = currentPrice.subtract(order.getBuyPrice()).divide(order.getBuyPrice(), BigDecimal.ROUND_HALF_UP);
 		return moreThan(risePercent, riseRate.multiply(layer));
 	}
@@ -93,8 +86,7 @@ public class StockMining extends MiningCal {
 		//
 		while (stockList.size() > 0 && stockList.getFirst().canSale(currentPrice)) {
 			log("sale......." + times + " # " + currentPrice);
-			Order item = stockList.remove().sale(times, currentPrice);
-			totalFundAmt = totalFundAmt.add(item.getSalAmt());
+			IOrder item = stockList.remove().sale(times, currentPrice);
 			totalUsedAmt = totalUsedAmt.subtract(item.getSalAmt());
 			stockSaledList.add(item);
 		}
@@ -140,14 +132,10 @@ public class StockMining extends MiningCal {
 			return;
 		}
 		//
-		if (stockList.size() > 1) {
-			qty = qty * (stockList.size() + 1) * 0.5; // 这句很关键
-		}
 		log("buy min.." + times + " # " + price);
-		Order order = new Order(times, price, qty.intValue());
+		IOrder order = new OrderImpl(times, price, qty.intValue());
 		stockList.addFirst(order);
 		//
-		totalFundAmt = totalFundAmt.subtract(order.getBuyAmt());
 		totalUsedAmt = totalUsedAmt.add(order.getBuyAmt());
 		//
 		if (lessThan(totalMaxUsedAmt, totalUsedAmt)) {
@@ -163,10 +151,9 @@ public class StockMining extends MiningCal {
 			return;
 		}
 		log("buy max...." + times + " # " + price);
-		Order order = new Order(times, price, qty.intValue());
+		IOrder order = new OrderImpl(times, price, qty.intValue());
 		stockList.addLast(order);
 		//
-		totalFundAmt = totalFundAmt.subtract(order.getBuyAmt());
 		totalUsedAmt = totalUsedAmt.add(order.getBuyAmt());
 		//
 		if (lessThan(totalMaxUsedAmt, totalUsedAmt)) {
@@ -179,16 +166,12 @@ public class StockMining extends MiningCal {
 	private Double getQtyByPrice(BigDecimal price) {
 		Double qty = 0d;
 		if (price.floatValue() <= 12) {
-			qty = 300d;
+			qty = 3000d;
 		} else if (price.floatValue() > 12 && price.floatValue() <= 18) {
-			qty = 200d;
+			qty = 2000d;
 		} else if (price.floatValue() > 18 && price.floatValue() <= 35) {
-			qty = 100d;
+			qty = 1000d;
 		}
 		return qty;
-	}
-
-	private void log(String s) {
-		System.out.println(s);
 	}
 }

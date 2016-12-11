@@ -7,8 +7,9 @@ import java.util.Date;
 import com.tnmnet.steel.service.MiningCal;
 import com.tnmnet.steel.util.DateUtil;
 import com.tnmnet.steel.util.DateUtils;
+import com.tnmnet.steel.util.GlobalConstant;
 
-public class Order extends MiningCal {
+public class OrderImpl extends MiningCal implements IOrder {
 
 	private String buyTimes;
 	private BigDecimal buyPrice;
@@ -17,95 +18,64 @@ public class Order extends MiningCal {
 	private Date salTimes;
 	private BigDecimal salPrice;
 
-	public Order(String times, BigDecimal price, Integer qty) {
+	public OrderImpl(String times, BigDecimal price, Integer qty) {
 		super();
 		this.buyTimes = times;
 		this.buyPrice = price;
 		this.qty = qty;
 	}
 
-	public String getBuyTimes() {
-		return buyTimes;
-	}
-
+	@Override
 	public BigDecimal getBuyPrice() {
 		return buyPrice;
 	}
 
-	public Integer getQty() {
-		return qty;
-	}
-
-	/**
-	 * 可以顺带卖吗？
-	 * 
-	 * @param salePrice
-	 * @return
-	 */
+	@Override
 	public boolean canSale(BigDecimal salePrice) {
 		return moreThan(salePrice, buyPrice.multiply(new BigDecimal(1.02)));
 	}
 
-	/**
-	 * 卖出
-	 * 
-	 * @param times
-	 * @param price
-	 */
-	public Order sale(String times, BigDecimal price) {
+	@Override
+	public IOrder sale(String times, BigDecimal price) {
 		this.salTimes = DateUtil.getDateFromString(times, "yyyy-MM-dd");
 		this.salPrice = price;
 		return this;
 	}
 
-	/**
-	 * 买入金额
-	 * 
-	 * @return
-	 */
+	@Override
 	public BigDecimal getBuyAmt() {
 		return buyPrice.multiply(new BigDecimal(qty));
 	}
 
-	/**
-	 * 卖出金额
-	 * 
-	 * @return
-	 */
+	@Override
 	public BigDecimal getSalAmt() {
-		return salPrice.multiply(new BigDecimal(qty));
+		return this.getSalAmt(this.salPrice);
 	}
 
-	public BigDecimal getSalAmt(BigDecimal price) {
+	private BigDecimal getSalAmt(BigDecimal price) {
 		return price.multiply(new BigDecimal(qty));
 	}
 
-	public BigDecimal getYearRate() {
-		return getYearRate(this.salPrice);
+	public BigDecimal getProfitAmt() {
+		return this.getProfitAmt(this.salPrice);
 	}
 
-	public BigDecimal getYearRate(BigDecimal salePrice) {
-		BigDecimal saleAmt = this.getSalAmt(salePrice);
+	private BigDecimal getProfitAmt(BigDecimal salePrice) {
+		BigDecimal costAmt = this.getBuyAmt().multiply(GlobalConstant.costRate.multiply(new BigDecimal(this.holdDays())));
+		return this.getSalAmt(salePrice).subtract(this.getBuyAmt().add(costAmt));
+	}
+
+	@Override
+	public BigDecimal getProfitRate() {
+		return getProfitRate(this.salPrice);
+	}
+
+	private BigDecimal getProfitRate(BigDecimal salePrice) {
+		BigDecimal priftAmt = this.getProfitAmt(salePrice);
 		BigDecimal buyAmt = this.getBuyAmt();
-		BigDecimal annual = this.annual();
-		return saleAmt.subtract(buyAmt).divide(buyAmt, BigDecimal.ROUND_HALF_UP).multiply(annual);
+		return priftAmt.subtract(buyAmt).divide(buyAmt, BigDecimal.ROUND_HALF_UP);
 	}
 
-	/**
-	 * 年化计算
-	 * 
-	 * @return
-	 */
-	private BigDecimal annual() {
-		int days = holdDays();
-		return (new BigDecimal(365)).divide(new BigDecimal(days), BigDecimal.ROUND_HALF_UP, 6);
-	}
-
-	/**
-	 * 持有天数
-	 * 
-	 * @return
-	 */
 	private int holdDays() {
 		if (this.salTimes == null) {
 			System.out.println("");
@@ -122,11 +92,10 @@ public class Order extends MiningCal {
 		sb.append(" buyPrice: " + this.buyPrice);
 		sb.append(" salTimes: " + DateUtils.getDateString(this.salTimes, "yyyy-MM-dd"));
 		sb.append(" salPrice: " + this.salPrice);
-		sb.append(" holdDays: " + holdDays());
+		sb.append(" holdDays: " + this.holdDays());
 		sb.append(" difPrice: " + this.salPrice.subtract(this.buyPrice));
-		sb.append(" nowsRate : " + this.getSalAmt().subtract(this.getBuyAmt()).divide(this.getBuyAmt(), BigDecimal.ROUND_HALF_UP, 6));
-		sb.append(" yearRate : " + this.getYearRate());
-		sb.append(" difAmount: " + this.getSalAmt().subtract(this.getBuyAmt()));
+		sb.append(" profiAmt: " + this.getProfitAmt());
+		sb.append(" profRate: " + this.getProfitRate());
 		//
 		return sb.toString();
 	}
