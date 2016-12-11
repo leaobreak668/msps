@@ -6,7 +6,7 @@ import java.util.Date;
 import com.tnmnet.steel.util.Bdc;
 import com.tnmnet.steel.util.DateUtils;
 
-public abstract class MiningCal {
+public abstract class AbsMiningCal {
 
 	protected int calDays(Date d1, Date d2) {
 		return DateUtils.daysBetween(d1, d2);

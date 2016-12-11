@@ -4,12 +4,12 @@ import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
 
-import com.tnmnet.steel.service.MiningCal;
+import com.tnmnet.steel.service.AbsMiningCal;
 import com.tnmnet.steel.util.DateUtil;
 import com.tnmnet.steel.util.DateUtils;
 import com.tnmnet.steel.util.GlobalConstant;
 
-public class OrderImpl extends MiningCal implements IOrder {
+public class OrderImpl extends AbsMiningCal implements IOrder {
 
 	private String buyTimes;
 	private BigDecimal buyPrice;
@@ -60,9 +60,18 @@ public class OrderImpl extends MiningCal implements IOrder {
 		return this.getProfitAmt(this.salPrice);
 	}
 
+	@Override
+	public BigDecimal getSalAmtWithCost() {
+		return this.getSalAmt().subtract(this.getCostAmt());
+	}
+
 	private BigDecimal getProfitAmt(BigDecimal salePrice) {
-		BigDecimal costAmt = this.getBuyAmt().multiply(GlobalConstant.costRate.multiply(new BigDecimal(this.holdDays())));
+		BigDecimal costAmt = getCostAmt();
 		return this.getSalAmt(salePrice).subtract(this.getBuyAmt().add(costAmt));
+	}
+
+	private BigDecimal getCostAmt() {
+		return this.getBuyAmt().multiply(GlobalConstant.costRate.multiply(new BigDecimal(this.holdDays())));
 	}
 
 	@Override
@@ -71,9 +80,9 @@ public class OrderImpl extends MiningCal implements IOrder {
 	}
 
 	private BigDecimal getProfitRate(BigDecimal salePrice) {
-		BigDecimal priftAmt = this.getProfitAmt(salePrice);
+		BigDecimal salAmt = this.getSalAmt(salePrice);
 		BigDecimal buyAmt = this.getBuyAmt();
-		return priftAmt.subtract(buyAmt).divide(buyAmt, BigDecimal.ROUND_HALF_UP);
+		return salAmt.subtract(buyAmt.add(this.getCostAmt())).divide(buyAmt, BigDecimal.ROUND_HALF_UP);
 	}
 
 	private int holdDays() {
@@ -90,11 +99,13 @@ public class OrderImpl extends MiningCal implements IOrder {
 		StringBuffer sb = new StringBuffer("");
 		sb.append(" buyTimes: " + this.buyTimes);
 		sb.append(" buyPrice: " + this.buyPrice);
+		sb.append(" qty     : " + this.qty);
 		sb.append(" salTimes: " + DateUtils.getDateString(this.salTimes, "yyyy-MM-dd"));
 		sb.append(" salPrice: " + this.salPrice);
 		sb.append(" holdDays: " + this.holdDays());
 		sb.append(" difPrice: " + this.salPrice.subtract(this.buyPrice));
 		sb.append(" profiAmt: " + this.getProfitAmt());
+		sb.append(" costAmt : " + this.getCostAmt());
 		sb.append(" profRate: " + this.getProfitRate());
 		//
 		return sb.toString();

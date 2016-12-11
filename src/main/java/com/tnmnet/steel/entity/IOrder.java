@@ -37,6 +37,12 @@ public interface IOrder {
 
 	/**
 	 * 
+	 * @return
+	 */
+	public BigDecimal getSalAmtWithCost();
+
+	/**
+	 * 
 	 * @param price
 	 * @return
 	 */

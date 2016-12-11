@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.tnmnet.steel.entity.Price;
 import com.tnmnet.steel.service.PriceService;
-import com.tnmnet.steel.service.StockMining;
+import com.tnmnet.steel.service.impl.StockMiningImpl;
 
 @RestController
 public class HelloWorldController {
@@ -20,7 +20,7 @@ public class HelloWorldController {
 	@RequestMapping("/hello/{code}")
 	public String index(@PathVariable("code") String code) {
 		List<Price> lists = priceService.findAllByCode(code);
-		StockMining sm = new StockMining();
+		StockMiningImpl sm = new StockMiningImpl();
 		sm.makeMoney(lists);
 		return "Hello Spring boot Service!" + lists.size();
 	}

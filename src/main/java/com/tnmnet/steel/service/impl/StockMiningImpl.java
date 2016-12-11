@@ -1,4 +1,4 @@
-package com.tnmnet.steel.service;
+package com.tnmnet.steel.service.impl;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -8,9 +8,10 @@ import java.util.List;
 import com.tnmnet.steel.entity.IOrder;
 import com.tnmnet.steel.entity.OrderImpl;
 import com.tnmnet.steel.entity.Price;
+import com.tnmnet.steel.service.AbsStockMining;
 import com.tnmnet.steel.util.Bdc;
 
-public class StockMining extends MiningCal {
+public class StockMiningImpl extends AbsStockMining {
 	//
 	private BigDecimal initAmt = new BigDecimal(1000000.0);// 初始金额
 	private BigDecimal totalAmt = new BigDecimal(1000000.0); // 可用资金额
@@ -60,7 +61,7 @@ public class StockMining extends MiningCal {
 		}
 		for (IOrder item : stockList) {
 			item.sale(latestTimes, latestPrice);
-			totalAmt = totalAmt.add(item.getSalAmt());
+			totalAmt = totalAmt.add(item.getSalAmtWithCost());
 			stockSaledList.add(item);
 			log("Sale Hold.." + item);
 		}
@@ -160,18 +161,5 @@ public class StockMining extends MiningCal {
 			totalMaxUsedAmt = totalUsedAmt;
 		}
 		maxPrice = price;
-	}
-
-	//
-	private Double getQtyByPrice(BigDecimal price) {
-		Double qty = 0d;
-		if (price.floatValue() <= 12) {
-			qty = 3000d;
-		} else if (price.floatValue() > 12 && price.floatValue() <= 18) {
-			qty = 2000d;
-		} else if (price.floatValue() > 18 && price.floatValue() <= 35) {
-			qty = 1000d;
-		}
-		return qty;
 	}
 }
